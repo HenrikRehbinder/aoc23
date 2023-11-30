@@ -1,4 +1,4 @@
-import numpy as np
-import matplotlib.pyplot as plt
+from utils.imports import *
+x = np.array((1, 2))
 
 
