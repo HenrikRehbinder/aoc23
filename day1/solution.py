@@ -1,4 +1,4 @@
 from utils.imports import *
-x = np.array((1, 2))
 
-
+with open('input.txt') as file:
+    data = [s.strip() for s in file.readlines()]
