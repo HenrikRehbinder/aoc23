@@ -21,12 +21,11 @@ def replace_strings(d):
     for key, val in i_s.items():
         ind1 = [i for i in range(len(d)) if d.startswith(val[0], i)]
         if len(ind1) > -1:
-            int_ind[key]= ind1
-
+            int_ind[key] = ind1
 
     dd = d
     for i, ii in enumerate(int_ind):
-         if not (ii == []):
+        if not (ii == []):
             for ind in ii:
                 dd = dd[:ind] + str(i) + dd[ind+1:]
     return dd
