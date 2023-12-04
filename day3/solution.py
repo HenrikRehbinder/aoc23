@@ -177,11 +177,19 @@ star_nums = []
 for row, star in enumerate(stars):
     for s in star:
         star_nums.append(numbers.find_star_nums((row, s)))
- ans = 0
+ans = 0
 for sn in star_nums:
     if len(sn) == 2:
         ans += int(sn[0])*int(sn[1])
 print(f'ans2: {ans}')
+
+
+str_m = []
+for mm in the_mask:
+     s = ''
+     for mmm in mm:
+         s += str(int(mmm))
+     str_m.append(s)
 
 with open('mask.txt', 'w') as f:
      for m, d in zip(str_m, data):
