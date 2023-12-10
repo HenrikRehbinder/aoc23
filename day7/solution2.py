@@ -1,15 +1,11 @@
 from utils.imports import *
+#file = 'test1.txt'
 file = 'input.txt'
-#file = 'input.txt'
 
 with open(file) as file:
     data = [s.strip() for s in file.readlines()]
 
-# varje hand ska få ett hand_strength-värde, sen en sekvens av card_strengths
-# Kanske göra en klass Hand som kan svara på hand_1.is_stronger_than(hand_2)
-# Vid konstruktion tar man reda på handtype (full house etc).
-
-card_order = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2']
+card_order = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J']
 card_order = np.array(list(reversed(card_order)))
 
 hand, bid = data[0].split(' ')
@@ -48,11 +44,32 @@ def hand_signature(hand):
         return None, None, None
 
 
+def joker_signature(hand):
+    # find jokers
+    #hand_strength = 0
+    hand_strength, hand_type, hand_vals = hand_signature(hand)
+    handarr = np.array([s for s in hand])
+    jok_i = np.argwhere(handarr == 'J')
+    if len(jok_i) > 0:
+        #print(f'jok_i: {jok_i}')
+        for replacement in it.product(card_order[1:], repeat=len(jok_i)):
+            #print(f'replacement {replacement}')
+            for i, r in zip(jok_i, replacement):
+                handarr[i] = r
+            handstr = ''.join([h for h in handarr])
+            strength, h_type, vals = hand_signature(handstr)
+            if strength > hand_strength:
+                hand_strength = strength
+                hand_type = h_type
+                #hand_vals = vals Här är felet.
+    return hand_strength, hand_type, hand_vals
+
+
 game = []
 for d in data:
     hand, bid = d.split(' ')
     bid = int(bid)
-    hand_strength, hand_type, card_vals = hand_signature(hand)
+    hand_strength, hand_type, card_vals = joker_signature(hand)
     game.append({
         'hand': hand,
         'bid': bid,
@@ -105,6 +122,6 @@ for stres_group in sorted_unique_stres:
         ra = ra + 1
 
 
-print(f'Ans1: {int((rank*bids).sum())}')
+print(f'Ans2: {int((rank*bids).sum())}')
 
 
