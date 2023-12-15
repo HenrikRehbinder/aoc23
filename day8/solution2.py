@@ -24,17 +24,32 @@ for key, val in network.items():
 
 steps = 0
 done = False
-#traverse_instr = 0
 li = len(instr)
 sources = start_nodes
+
+on_z = []
 while not done:
     ins = instr[steps % li]
     sources = [network[s][ins] for s in sources]
-    print(sources)
     steps += 1
-    if all([s[2] == 'Z' for s in sources]):
+    z = [s[2] == 'Z' for s in sources]
+    for channel, zz in enumerate(z):
+        if zz:
+            on_z.append([start_nodes[channel], steps])
+    if steps == 1000000:
         done = True
-    #if steps==1001: break
-
 print(f'Answ2: {steps}')
 
+on_z = np.array(on_z)
+z_stat = {}
+for s in start_nodes:
+    z = on_z[on_z[:, 0] == s][:, 1].astype('int')
+    zd = np.diff(z)
+    z_stat[s] = (z, zd)
+
+for s in start_nodes:
+    print('*')
+    print(s)
+    print((z_stat[s][0][0:10]))
+    print((z_stat[s][1][0:10]))
+print(f'Answ2: {math.lcm(**[z_stat[s][1][-1] for s in start_nodes])}')
