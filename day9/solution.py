@@ -10,86 +10,48 @@ for i, d in enumerate(data):
 
 
 def find_next(d):
-    #print('***')
-    #print(d)
     red_arr = d
-    #next = d[-1]
-#    while np.abs(red_arr).sum() > 0:
-    add = 0
+    seq = [d]
+    first_seq = 0
+    first = 0
+    next = d[-1]
     done = False
-    #print(red_arr)
     while not done:
         red_arr = [red_arr[i+1] - red_arr[i] for i in range(len(red_arr)-1)]
-      #  print(red_arr)
-        if len(red_arr) == 1:
-            done = True
-            print('what?')
-            print(red_arr)
-            why = 'end'
-        else:
-            if red_arr[-1] == 0:
-            #if all([ra == 0 for ra in red_arr]):
-                done = True
-                why = '0'
-        add += red_arr[-1]
-     #   print(add)
-    #print(f'd[-1] {d[-1]}')
-    #print(f'add {add}')
-    return d[-1] + add, why
-
-
-def find_seq(d):
-    #print('***')
-    #print(d)
-    seq = [d]
-    #red_arr = d
-    #next = d[-1]
-#    while np.abs(red_arr).sum() > 0:
-    add = 0
-    done = False
-    #print(red_arr)
-    while not done:
-        last = seq[-1]
-        red_arr = [last[i+1] - last[i] for i in range(len(last)-1)]
         seq.append(red_arr)
-        #print(red_arr)
-        if len(red_arr) == 0:
+        if all([r == 0 for r in red_arr]):
             done = True
-        else:
-            if all([ra == 0 for ra in red_arr]):
-                done = True
-    return seq, len(red_arr)
-
+        next += red_arr[-1]
+    app_seq = seq
+    for i in range(len(seq)):
+        j = len(seq)-1-i
+        app_seq[j] = [-first_seq + app_seq[j][0]] + app_seq[j]
+        first_seq = app_seq[j][0]
+        #first += first_seq
+    first = app_seq[0][0]
+    return next, first, seq, app_seq
 
 nexts = []
-problems = []
-for i, d in enumerate(data):
-    n = nexts.append(find_next(d))
-    if n == -1:
-        problems.append(i)
-    else:
-        nexts.append((i, n))
+firsts = []
 seqs = []
-prob = []
+app_seqs = []
 for i, d in enumerate(data):
-    seq, n = find_seq(d)
-    seqs.append((i, seq, n))
-    print((i, n))
-    if n == 0:
-        prob.append((i,n))
+    n, f, s, a_s = find_next(d)
+    nexts.append(n)
+    seqs.append(s)
+    firsts.append(f)
+    app_seqs.append(a_s)
 
-nexts = [find_next(d)[0] for d in data]
-whys = [find_next(d)[1] for d in data]
+print(f'Answ 1: {sum([m for m in nexts])}')
+print('Answ: 1702218515 is correct!')
 
-print(f'Answ: {sum([m for m in nexts])}')
-print('2588581978 is too high')
-print('2357498856 is too high')
+print(f'Answ 2: {sum([ff for ff in firsts])}')
 
-
-
-d = data[118]
-f, a = plt.subplots(1, num=1, clear=True)
-n = find_next(d)
-plt.plot(range(len(d)), d,'o')
-plt.plot([len(d) + 1], [n], '*')
+if False:
+    for i, s in enumerate(app_seqs):
+        print(i)
+        for ss in s:
+            print(ss)
+        print(f'next: {nexts[i]}')
+        print(f'first: {firsts[i]}')
 
