@@ -14,7 +14,6 @@ for d in data:
     win_num.append(wi)
     my_num.append(my)
 
-
 def find_wins_and_score(win_nums, my_nums):
     wins = [m for m in my_nums if m in win_nums]
     if len(wins) > 0:
@@ -37,6 +36,7 @@ print(score)
 
 # Part 2
 
+# a list containing the number of cards of each sort.
 cards = np.ones((len(data), 1))
 
 nc = np.zeros(cards.shape)
