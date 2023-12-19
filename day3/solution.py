@@ -1,6 +1,7 @@
 import numpy as np
 import itertools as iter
 from utils.imports import *
+import re
 file = ('input.txt')
 with open(file) as file:
     data = [s.strip() for s in file.readlines()]
@@ -20,10 +21,12 @@ class Mask():
         self.mask = np.zeros((len(self.data), len(self.data[0]))).astype(int)
 
     def find_symbols(self):
+        # Här ska man använda regexp för att hitta symboler. Både symboler och deras index. Gör första delen av make_mask här
         datastr = ''
         for d in self.data:
             datastr = datastr + d
         symbols = datastr
+        #symbols = ''.join(data)
         for i in range(10):
             symbols = symbols.replace(str(i), '')
         symbols = symbols.replace('.', '')
@@ -35,7 +38,8 @@ class Mask():
             for col, s in enumerate(d):
                 if s in self.symbol_str:
                     sym_ind.append((row, col))
-
+        # Borde man inte skapa en 0-matris i np.
+        # Sen adderar man en 0-matris där man satt 1or på rätt positioner. Mycket lättare.
         n_r, n_c = self.mask.shape
         for si in sym_ind:
             for d_r, d_c in iter.product([-1, 0, 1], [-1, 0, 1]):
@@ -98,18 +102,26 @@ class Numbers:
         self.numbers = found_nums
 
     def find_row_numbers(self, d):
-        i = 0
-        nums_row = []
-        while i < len(d):
-            if d[i].isnumeric():
-                eow = False
-                j = i + 1
-                while not eow:
-                    eow = True
-                    if j < len(d):
-                       if d[j].isnumeric():
-                           j = j + 1
-                           eow = False
+        if False:
+            nums = re.findall(r'\d+', d)
+            nums = list(set(nums))
+            nums_row = []
+            for num in nums:
+                for r in re.finditer(num, d):
+                    nums_row.append((num, r.span()[0], r.span()[1]))
+        else:
+            i = 0
+            nums_row = []
+            while i < len(d):
+                if d[i].isnumeric():
+                    eow = False
+                    j = i + 1
+                    while not eow:
+                        eow = True
+                        if j < len(d):
+                            if d[j].isnumeric():
+                                j = j + 1
+                                eow = False
                 nums_row.append((d[i:min(j, len(d))], i, j))
                 i = j+1
             else:
@@ -127,7 +139,7 @@ class Numbers:
         return adj_nums
 
     def adjacent(self, num, row, r, c):
-        print((num, row, r, c))
+        #print((num, row, r, c))
         distances = [(r-row)**2 + (c-cc)**2 for cc in range(num[1], num[2])]
         return min(distances) <= 2.01
 
@@ -169,8 +181,8 @@ numbers.find_numbers()
 numbers.find_valid_numbers(the_mask)
 n = numbers.get_valid_numbers()
 
-print(numbers.get_answer())
-
+print(f'ans1: {numbers.get_answer()}')
+print(f'right answer: {56367}')
 stars = mask.find_stars()
 
 star_nums = []
@@ -182,6 +194,8 @@ for sn in star_nums:
     if len(sn) == 2:
         ans += int(sn[0])*int(sn[1])
 print(f'ans2: {ans}')
+print(f'right answer: {89471771}')
+# right answer: 89471771
 
 
 str_m = []
