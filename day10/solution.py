@@ -119,3 +119,12 @@ def print_pipes(pipe_map):
         print(pm)
 
 #print_pipes(pipe_map)
+
+
+
+Ide: Man gör en 2d-array som representerar delen mellan pipes. 
+Den kan vara öppen eller stängd. Det blir nog en graf och kanske ska
+man testa ett grafbibliotek https://networkx.org/documentation/stable/tutorial.html
+kanske. Borde finnas en kortaste-vägensökning i den. (för 1an)
+Kanske nån sorts subgraf kan användas. 
+Det verkar ju troligt att Pipes blir länkar mellan tiles eller så. 
