@@ -1,7 +1,8 @@
 from utils.imports import *
 file = 'input.txt'
 file = 'test2.txt'
-#file = 'test3.txt'
+file = 'test3.txt'
+file = 'input.txt'
 
 with open(file) as file:
     pipe_map = [s.strip() for s in file.readlines()]
@@ -101,14 +102,14 @@ for direction in directions:
     if pos != -1:
         real_directions.append(direction)
 
-print(real_directions)
+#print(real_directions)
 pos = B
 poss = [pos]
 direction = real_directions[0]
 directions = [direction]
 while pos != -2:
     pos, direction = take_step(direction, pos, pipe_map, dist_map)
-    print(direction)
+    #print(direction)
     directions.append(direction)
     poss.append(pos)
     #print(dist_map)
@@ -131,8 +132,9 @@ def print_pipes(pipe_map):
 print('1')
 poss[-1] = poss[0]
 
-loop_rows, loop_cols = np.where(dist_map > -1)
-loop_nodes = [(r, c) for r, c in zip(loop_rows, loop_cols)]
+#loop_rows, loop_cols = np.where(dist_map > -1)
+#loop_nodes = [(r, c) for r, c in zip(loop_rows, loop_cols)]
+loop_nodes = poss[:-1]
 
 encl_cand = np.where(dist_map == -1)
 encl_cand = [[r, c] for r, c in zip(encl_cand[0], encl_cand[1])]
@@ -147,8 +149,8 @@ def grow(node, loop_nodes, n_rows, n_cols):
     dirs = np.array(((1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (-1, -1)))
     i = 0
     while not ended:
-        print(f'grow_step: {i}')
-        print(f'patch size: {len(patch)}')
+        #print(f'grow_step: {i}')
+        #print(f'patch size: {len(patch)}')
         j = len(patch)
         for dir in dirs:
             test_node = patch[i] + dir
@@ -170,7 +172,7 @@ def grow(node, loop_nodes, n_rows, n_cols):
 #        print(len(patch))
         #if i == 20:
         #    break
-    return patch, edge_patch
+    return [(p[0],p[1]) for p in patch], edge_patch
 
 print('3')
 
@@ -201,37 +203,62 @@ def extend_loop_nodes(loop_nodes):
     ext_loop_nodes = [
         (new_ind(ln[0]), new_ind(ln[1]))
     ]
-    for ln in loop_nodes[1:]:
+    for ln in loop_nodes[1:]+[loop_nodes[0]]:
         last_node = ext_loop_nodes[-1]
         next_next_node = (new_ind(ln[0]), new_ind(ln[1]))
         if next_next_node[0] == last_node[0]:
-            intermediate_node = (last_node[0], last_node[1]+1)
+            if last_node[1] < next_next_node[1]:
+                d = 1
+            else:
+                d = -1
+            intermediate_node = (last_node[0], last_node[1]+d)
         else:
-            intermediate_node = (last_node[0]+1, last_node[1])
+            if last_node[0] < next_next_node[0]:
+                d = 1
+            else:
+                d = -1
+            intermediate_node = (last_node[0]+d, last_node[1])
         ext_loop_nodes.append(intermediate_node)
         #print(intermediate_node)
         ext_loop_nodes.append(next_next_node)
+    ext_loop_nodes = ext_loop_nodes[:-1]
     return ext_loop_nodes
 
-print(loop_nodes)
-print('ext')
+#print(loop_nodes)
+#print('ext')
 ext_loop_nodes = extend_loop_nodes(loop_nodes)
-print(ext_loop_nodes)
+#print(ext_loop_nodes)
 
 def encl_candidates_original(dist_map):
     indices = np.argwhere(dist_map == -1)
     mapped_ind = []
     for ind in indices:
-        mapped_ind.append([new_ind(ind[0]), new_ind(ind[1])])
+        mapped_ind.append((new_ind(ind[0]), new_ind(ind[1])))
     return mapped_ind
 
-
+encl_cand_old_grid = encl_cand
 encl_cand_original = encl_candidates_original(dist_map)
+encl_cand = []
+pipe_disp = []
+for row in range(2*n_rows+1):
+    pd = []
+    for col in range(2*n_cols+1):
+        if not (row, col) in ext_loop_nodes:
+            encl_cand.append((row, col))
+            pd.append('o')
+        else:
+            pd.append('*')
+    pipe_disp.append(''.join(pd))
+
+#[print(pd) for pd in pipe_disp]
 
 
+
+#-----------
+#if False:
 patches = []
 edge_patches = []
-rem_cand = encl_cand   Här är felet. Måste utöka, eller ev bara loopa över kanten (smart)
+rem_cand = encl_cand   #Här är felet. Måste utöka, eller ev bara loopa över kanten (smart)
 i = 0
 while len(rem_cand) > 0:
 
@@ -247,7 +274,67 @@ while len(rem_cand) > 0:
 
 print('4')
 
-patch_vis = np.ones(dist_map.shape)
+print((n_rows*2+1)*(n_cols*2+1))
+n = 0
+for patch in patches:
+    n += len(patch)
+n += len(ext_loop_nodes)
+print(n)
+
+ill_map = {}
+for ln in ext_loop_nodes:
+    ill_map[ln] = 'x'
+for patch, edge_patch in zip(patches, edge_patches):
+    if edge_patch:
+        m = 'O'
+    else:
+        m = 'I'
+    for p in patch:
+        ill_map[p] = m
+
+
+illu = []
+for row in range(n_rows*2+1):
+    ill = []
+    for col in range(n_cols*2+1):
+        ill.append(ill_map[(row, col)])
+    illu.append(''.join(ill))
+#for ill in illu:
+    #print(ill)
+
+# hitta alla index för encl_cand_original som också finns i edge patches.
+# dessa index kan man sen gå in i encl_cand_org_grid
+# räcker med att räkna index
+total_inner = []
+for patch, edge_patch in zip(patches, edge_patches):
+    if not edge_patch:
+        total_inner += patch
+
+inner = 0
+for p in encl_cand_original:
+    if ((np.array(p) == np.array(total_inner)).sum(axis=1) == 2).any():
+        inner += 1
+
+print(f'inner: {inner}')
+
+'''
+def remove_patch_encl(patch, encl):
+    for p in patch:
+        i = np.argwhere(((np.array(encl) == p).sum(axis=1) == 2))
+        if i.shape[0] == 1:
+            encl.pop(i[0][0])
+    return encl
+
+
+
+encl = encl_cand
+for patch, edge_patch in zip(patches, edge_patches):
+    if edge_patch:
+        encl = remove_patch_encl(patch, encl)
+    #print(encl)
+
+#######################
+patch_vis = np.ones((2*n_rows+1, 2*n_cols+1))
 for p in patch:
     patch_vis[p[0], p[1]] = 0
 print(patch_vis)
@@ -265,7 +352,7 @@ for patch, edge in zip(patches, edge_patches):
     if edge:
         s = '0'
     else:
-        s = '%'
+        s = 'I'
     for p in patch:
         pipe_list[p[0]][p[1]] = s
 
@@ -273,6 +360,8 @@ pipe_disp = []
 for p in pipe_list:
     pipe_disp.append((''.join(p)))
 [print(p) for p in pipe_disp]
+'''
+
 
 '''
 tot_contained = 0
