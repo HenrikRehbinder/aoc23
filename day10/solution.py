@@ -147,6 +147,39 @@ def grow(node, loop_nodes, n_rows, n_cols):
     patch = [np.array(node)]
     ended = False
     dirs = np.array(((1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (-1, -1)))
+    dirs = np.array(((1, 0), (0, 1), (0, -1), (-1, 0)))
+    i = 0
+    while not ended:
+        #print(f'grow_step: {i}')
+        #print(f'patch size: {len(patch)}')
+        j = len(patch)
+        for dir in dirs:
+            test_node = patch[i] + dir
+            if (
+                    test_node[0] >= 0 and test_node[0] < n_rows and test_node[1] >= 0 and test_node[1] < n_cols
+                    and not np.any(np.all(test_node == loop_nodes, axis=1))
+                    and not np.any(np.all(test_node == patch[:j], axis=1))
+            ):
+                patch = np.vstack((patch, test_node))
+                if not edge_patch:
+                    if test_node[0] == 0 or test_node[0] == n_rows-1 or test_node[1] == 0 or test_node[1] == n_cols-1:
+                        edge_patch = True
+
+        if i == len(patch)-1:
+            ended = True
+        i = i + 1
+#        print('*')
+#        print(i)
+#        print(len(patch))
+        #if i == 20:
+        #    break
+    return [(p[0],p[1]) for p in patch], edge_patch
+def grow2(node, loop_nodes, n_rows, n_cols):
+    edge_patch = False
+    patch = [np.array(node)]
+    ended = False
+    dirs = np.array(((1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (-1, -1)))
+    dirs = np.array(((1, 0), (0, 1), (0, -1), (-1, 0)))
     i = 0
     while not ended:
         #print(f'grow_step: {i}')
@@ -225,7 +258,7 @@ def extend_loop_nodes(loop_nodes):
     return ext_loop_nodes
 
 #print(loop_nodes)
-#print('ext')
+print('extending loop_nodes')
 ext_loop_nodes = extend_loop_nodes(loop_nodes)
 #print(ext_loop_nodes)
 
@@ -237,32 +270,37 @@ def encl_candidates_original(dist_map):
     return mapped_ind
 
 encl_cand_old_grid = encl_cand
+print('mapping encl_cand')
 encl_cand_original = encl_candidates_original(dist_map)
-encl_cand = []
-pipe_disp = []
-for row in range(2*n_rows+1):
-    pd = []
-    for col in range(2*n_cols+1):
-        if not (row, col) in ext_loop_nodes:
-            encl_cand.append((row, col))
-            pd.append('o')
-        else:
-            pd.append('*')
-    pipe_disp.append(''.join(pd))
+if False:
+    encl_cand = []
+    pipe_disp = []
+    for row in range(2*n_rows+1):
+        pd = []
+        for col in range(2*n_cols+1):
+            if not (row, col) in ext_loop_nodes:
+                encl_cand.append((row, col))
+                pd.append('o')
+            else:
+                pd.append('*')
+        pipe_disp.append(''.join(pd))
 
-#[print(pd) for pd in pipe_disp]
+    [print(pd) for pd in pipe_disp]
 
 
 
 #-----------
 #if False:
+
 patches = []
 edge_patches = []
 rem_cand = encl_cand   #Här är felet. Måste utöka, eller ev bara loopa över kanten (smart)
 i = 0
+print('looking for patches')
 while len(rem_cand) > 0:
-
+    print(i)
     patch, edge_patch = grow(rem_cand[0], ext_loop_nodes, n_rows*2+1, n_cols*2+1)
+    print('found patch')
     patches.append(patch)
     edge_patches.append(edge_patch)
     old_cand = rem_cand
@@ -316,117 +354,4 @@ for p in encl_cand_original:
         inner += 1
 
 print(f'inner: {inner}')
-
-'''
-def remove_patch_encl(patch, encl):
-    for p in patch:
-        i = np.argwhere(((np.array(encl) == p).sum(axis=1) == 2))
-        if i.shape[0] == 1:
-            encl.pop(i[0][0])
-    return encl
-
-
-
-encl = encl_cand
-for patch, edge_patch in zip(patches, edge_patches):
-    if edge_patch:
-        encl = remove_patch_encl(patch, encl)
-    #print(encl)
-
-#######################
-patch_vis = np.ones((2*n_rows+1, 2*n_cols+1))
-for p in patch:
-    patch_vis[p[0], p[1]] = 0
-print(patch_vis)
-
-
-pipe_disp = []
-for p in pipe_map:
-    pipe_disp.append((''.join(p)).replace('.', 'x'))
-#[print(p) for p in pipe_disp]
-
-pipe_list = []
-for p in pipe_disp:
-    pipe_list.append([pp for pp in p])
-for patch, edge in zip(patches, edge_patches):
-    if edge:
-        s = '0'
-    else:
-        s = 'I'
-    for p in patch:
-        pipe_list[p[0]][p[1]] = s
-
-pipe_disp = []
-for p in pipe_list:
-    pipe_disp.append((''.join(p)))
-[print(p) for p in pipe_disp]
-'''
-
-
-'''
-tot_contained = 0
-for j in [i for i, ep in enumerate(edge_patches) if ep == False]:
-    print(j)
-    tot_contained += len(patches[j]) #len(np.unique(patches[j], axis=0))
-
-#path_starters = [ec for encl_cand if (ec[0]==0 or ec[-1]==n_rows)
-# grow path
-def crosses_loop(c1, c2, loop_nodes):
-    c1_ind = np.where(np.sum(c1 == loop_nodes, axis=1) == 2)[0][0]
-    c2_ind = np.where(np.sum(c2 == loop_nodes, axis=1) == 2)[0][0]
-    return abs(c1_ind-c2_ind)==1
-
-
-
-p = [0, 0]
-
-
-dirs = np.array(((1, 0), (0, 1), (0, -1), (-1, 0),))
-
-edge_patch = False
-path = [np.array(p)]
-ended = False
-i = 0
-while not ended:
-    print(f'grow_step: {i}')
-    print(f'patch size: {len(patch)}')
-    j = len(path)
-    for dir in dirs:
-        test_node = path[i] + dir
-        inside = test_node[0] >= 0 and test_node[0] < n_rows-1 and test_node[1] >= 0 and test_node[1] < n_cols-1
-        allready_found = np.any(np.all(test_node == patch[:j], axis=1))
-        if dir[0] == 0:
-            c1 = path[i] + np.array([1, 0])
-            c2 = path[i] + np.array([0, 1])
-        else:
-            c1 = path[i] + np.array([0, 1])
-            c2 = path[i] + np.array([1, 0])
-        cross = crosses_loop(c1, c2, loop_nodes)
-        if inside and not allready_found and not cross:
-
-            patch = np.vstack((patch, test_node))
-                if not edge_patch:
-                    if test_node[0] == 0 or test_node[0] == n_rows - 1 or test_node[1] == 0 or test_node[
-                        1] == n_cols - 1:
-                        edge_patch = True
-
-        if i == len(patch) - 1:
-
-print(f'Answ2: {tot_contained}')
-
-
-
-  0 1 2 3 4 5 
-  . . . . . .           
-   o   o
-0 . F - - - -         
-     o o
-1 .oIo. .             
-
-2 . I . .               
-
-3
-4
-5
-'''
 
