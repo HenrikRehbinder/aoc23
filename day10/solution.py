@@ -123,18 +123,8 @@ def print_pipes(pipe_map):
     for pm in pipe_map:
         print(pm)
 
-# print_pipes(pipe_map)
-
-# 'Ide: Man gör en 2d-array som representerar delen mellan pipes. Den kan vara öppen eller stängd.' 
-#      Det blir nog en graf och kanske ska man testa ett grafbibliotek\\
-#          https://networkx.org/documentation/stable/tutorial.html kanske. Borde finnas en kortaste-vägensökning i den. \\
-##            (för 1an) Kanske nån sorts subgraf kan användas. Det verkar ju troligt att Pipes blir länkar mellan tiles eller så.
-#            ')
-print('1')
 poss[-1] = poss[0]
 
-#loop_rows, loop_cols = np.where(dist_map > -1)
-#loop_nodes = [(r, c) for r, c in zip(loop_rows, loop_cols)]
 loop_nodes = poss[:-1]
 
 encl_cand = np.where(dist_map == -1)
@@ -143,38 +133,7 @@ encl_cand = [[r, c] for r, c in zip(encl_cand[0], encl_cand[1])]
 print(f'map size {dist_map.shape}')
 print('2')
 #input('press')
-def grow(node, loop_nodes, n_rows, n_cols):
-    edge_patch = False
-    patch = [np.array(node)]
-    ended = False
-    dirs = np.array(((1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (-1, -1)))
-    dirs = np.array(((1, 0), (0, 1), (0, -1), (-1, 0)))
-    i = 0
-    while not ended:
-        #print(f'grow_step: {i}')
-        #print(f'patch size: {len(patch)}')
-        j = len(patch)
-        for dir in dirs:
-            test_node = patch[i] + dir
-            if (
-                    test_node[0] >= 0 and test_node[0] < n_rows and test_node[1] >= 0 and test_node[1] < n_cols
-                    and not np.any(np.all(test_node == loop_nodes, axis=1))
-                    and not np.any(np.all(test_node == patch[:j], axis=1))
-            ):
-                patch = np.vstack((patch, test_node))
-                if not edge_patch:
-                    if test_node[0] == 0 or test_node[0] == n_rows-1 or test_node[1] == 0 or test_node[1] == n_cols-1:
-                        edge_patch = True
 
-        if i == len(patch)-1:
-            ended = True
-        i = i + 1
-#        print('*')
-#        print(i)
-#        print(len(patch))
-        #if i == 20:
-        #    break
-    return [(p[0],p[1]) for p in patch], edge_patch
 def grow2(rem_cand, map, n_rows, n_cols):
     #edge_patch = False
     ended = False
@@ -272,34 +231,16 @@ def encl_candidates_original(dist_map):
         mapped_ind.append((new_ind(ind[0]), new_ind(ind[1])))
     return mapped_ind
 
-encl_cand_old_grid = encl_cand
-print('mapping encl_cand')
+#encl_cand_old_grid = encl_cand
+#print('mapping encl_cand')
 encl_cand_original = encl_candidates_original(dist_map)
-if False:
-    encl_cand = []
-    pipe_disp = []
-    for row in range(2*n_rows+1):
-        pd = []
-        for col in range(2*n_cols+1):
-            if not (row, col) in ext_loop_nodes:
-                encl_cand.append((row, col))
-                pd.append('o')
-            else:
-                pd.append('*')
-        pipe_disp.append(''.join(pd))
-
-    [print(pd) for pd in pipe_disp]
 
 
-
-#-----------
-#if False:
 map = {}
 for row in range(2*n_rows+1):
     for col in range(2*n_cols+1):
         map[(row, col)] = '.'
-#for p in encl_cand:
-#    map[p] = 'c'
+
 for p in ext_loop_nodes:
     map[p] = 'x'
 
@@ -312,10 +253,8 @@ for c in [0, 2*n_cols]:
         rem_cand.append((r, c))
 
 ended = False
-patches = []
 while not ended:
     patch, map = grow2(rem_cand, map, n_rows*2+1, n_cols*2+1)
-    patches.append(patch)
     rem_cand_new = []
     for i, rc in enumerate(rem_cand):
         if map[rc] == '.':
@@ -324,87 +263,9 @@ while not ended:
     if len(rem_cand) == 0:
         ended = True
 
-total_inner = []
-for patch in patches:
-    total_inner += patch
-
 inner = 0
 for p in encl_cand_original:
     if map[p] == '.':
         inner += 1
 
-print(f'inner: {inner}')
-
-illu = [['I' for col in range(n_cols*2+1)] for row in range(n_rows*2+1)]
-
-#np.ones((n_rows*2+1, n_cols*2+1))
-for key, val in map.items():
-    illu[key[0]][key[1]] = val
-
-#for il in illu:
-#    print(''.join(il))
-
-'''
-patches = []
-edge_patches = []
-rem_cand = encl_cand   #Här är felet. Måste utöka, eller ev bara loopa över kanten (smart)
-i = 0
-print('looking for patches')
-while len(rem_cand) > 0:
-    print(i)
-    patch, edge_patch = grow(rem_cand[0], ext_loop_nodes, n_rows*2+1, n_cols*2+1)
-    print('found patch')
-    patches.append(patch)
-    edge_patches.append(edge_patch)
-    old_cand = rem_cand
-    rem_cand = []
-    for enc in old_cand:
-        if not np.any(np.all(np.array(enc) == patch, axis=1)):
-            rem_cand.append(enc)
-    i = i + 1
-
-print('4')
-
-print((n_rows*2+1)*(n_cols*2+1))
-n = 0
-for patch in patches:
-    n += len(patch)
-n += len(ext_loop_nodes)
-print(n)
-
-ill_map = {}
-for ln in ext_loop_nodes:
-    ill_map[ln] = 'x'
-for patch, edge_patch in zip(patches, edge_patches):
-    if edge_patch:
-        m = 'O'
-    else:
-        m = 'I'
-    for p in patch:
-        ill_map[p] = m
-
-
-illu = []
-for row in range(n_rows*2+1):
-    ill = []
-    for col in range(n_cols*2+1):
-        ill.append(ill_map[(row, col)])
-    illu.append(''.join(ill))
-#for ill in illu:
-    #print(ill)
-
-# hitta alla index för encl_cand_original som också finns i edge patches.
-# dessa index kan man sen gå in i encl_cand_org_grid
-# räcker med att räkna index
-total_inner = []
-for patch, edge_patch in zip(patches, edge_patches):
-    if not edge_patch:
-        total_inner += patch
-
-inner = 0
-for p in encl_cand_original:
-    if ((np.array(p) == np.array(total_inner)).sum(axis=1) == 2).any():
-        inner += 1
-
-print(f'inner: {inner}')
-'''
+print(f'inner: {inner} 453 is the right answer')
