@@ -1,4 +1,5 @@
 from utils.imports import *
+import itertools as iter
 file = 'input.txt'
 file = 'test2.txt'
 file = 'test3.txt'
@@ -174,28 +175,30 @@ def grow(node, loop_nodes, n_rows, n_cols):
         #if i == 20:
         #    break
     return [(p[0],p[1]) for p in patch], edge_patch
-def grow2(node, loop_nodes, n_rows, n_cols):
-    edge_patch = False
-    patch = [np.array(node)]
+def grow2(rem_cand, map, n_rows, n_cols):
+    #edge_patch = False
     ended = False
-    dirs = np.array(((1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (-1, -1)))
+    #dirs = np.array(((1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (-1, -1)))
     dirs = np.array(((1, 0), (0, 1), (0, -1), (-1, 0)))
     i = 0
+    patch = [rem_cand[0]]
+    map[rem_cand[0]] = '0'
     while not ended:
         #print(f'grow_step: {i}')
         #print(f'patch size: {len(patch)}')
-        j = len(patch)
+        #j = len(patch)
         for dir in dirs:
-            test_node = patch[i] + dir
+            test_node = (patch[i][0] + dir[0], patch[i][1] + dir[1])
             if (
                     test_node[0] >= 0 and test_node[0] < n_rows and test_node[1] >= 0 and test_node[1] < n_cols
-                    and not np.any(np.all(test_node == loop_nodes, axis=1))
-                    and not np.any(np.all(test_node == patch[:j], axis=1))
+                    and not map[test_node] in 'xpOI'
+                    #and not map[test_node] == 'p'
             ):
-                patch = np.vstack((patch, test_node))
-                if not edge_patch:
-                    if test_node[0] == 0 or test_node[0] == n_rows-1 or test_node[1] == 0 or test_node[1] == n_cols-1:
-                        edge_patch = True
+                patch = patch+[test_node]
+                map[test_node] = 'O'
+                #if not edge_patch:
+                #    if test_node[0] == 0 or test_node[0] == n_rows-1 or test_node[1] == 0 or test_node[1] == n_cols-1:
+                #        edge_patch = True
 
         if i == len(patch)-1:
             ended = True
@@ -205,7 +208,7 @@ def grow2(node, loop_nodes, n_rows, n_cols):
 #        print(len(patch))
         #if i == 20:
         #    break
-    return [(p[0],p[1]) for p in patch], edge_patch
+    return patch, map
 
 print('3')
 
@@ -291,7 +294,57 @@ if False:
 
 #-----------
 #if False:
+map = {}
+for row in range(2*n_rows+1):
+    for col in range(2*n_cols+1):
+        map[(row, col)] = '.'
+#for p in encl_cand:
+#    map[p] = 'c'
+for p in ext_loop_nodes:
+    map[p] = 'x'
 
+rem_cand = []
+for r in [0, 2*n_rows]:
+    for c in range(2*n_cols+1):
+        rem_cand.append((r, c))
+for c in [0, 2*n_cols]:
+    for r in range(1, 2*n_rows+1):
+        rem_cand.append((r, c))
+
+ended = False
+patches = []
+while not ended:
+    patch, map = grow2(rem_cand, map, n_rows*2+1, n_cols*2+1)
+    patches.append(patch)
+    rem_cand_new = []
+    for i, rc in enumerate(rem_cand):
+        if map[rc] == '.':
+            rem_cand_new.append(rc)
+    rem_cand = rem_cand_new
+    if len(rem_cand) == 0:
+        ended = True
+
+total_inner = []
+for patch in patches:
+    total_inner += patch
+
+inner = 0
+for p in encl_cand_original:
+    if map[p] == '.':
+        inner += 1
+
+print(f'inner: {inner}')
+
+illu = [['I' for col in range(n_cols*2+1)] for row in range(n_rows*2+1)]
+
+#np.ones((n_rows*2+1, n_cols*2+1))
+for key, val in map.items():
+    illu[key[0]][key[1]] = val
+
+#for il in illu:
+#    print(''.join(il))
+
+'''
 patches = []
 edge_patches = []
 rem_cand = encl_cand   #Här är felet. Måste utöka, eller ev bara loopa över kanten (smart)
@@ -354,4 +407,4 @@ for p in encl_cand_original:
         inner += 1
 
 print(f'inner: {inner}')
-
+'''
