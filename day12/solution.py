@@ -64,6 +64,10 @@ Om en candidadet börjar eller slutar med # så måste man lägga ut gruppen öv
 Dessa två är det första man gör för att reducera problemet. Baserat på det tidigare så får man krympa candidate så man inte får dubbla #. 
 
 ? Hur hantera de olika alternativen. Nåt träd? 
+
+problemet kan lösas för varje candidate. Antal kombos fås genom produkten av canidatealternativen
+Som sagt ovan. Först kollar man slut och början. Om de är något bestämt så gör man candiate mindre. 
+Sedan måste man skapa olika alternativ oc hålla reda på dem.
 '''
 
 d = data[1]
@@ -79,8 +83,9 @@ springs = '.#??.???#.#?#'
 groups = [1,2,3]
 candidates = [[1,3], [5,8], [10,12]]
 arrs = [[springs[:candidates[0][0]]]]
-måste tänke ut en struktur för alternativen,. jag kommer inte få ordning på det annars. 
+# måste tänke ut en struktur för alternativen,. jag kommer inte få ordning på det annars. 
+
 for candidate in candidates:
     if springs[candidate[0]]=='#':
-        arrs[-1] = arrs[-1] + ['#' for i in range(candidate[1]-candidate[0]-1)]
+        one_arr =  ['#' for i in range(candidate[1]-candidate[0]+1)]
 print(arrs)
