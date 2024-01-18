@@ -68,24 +68,117 @@ Dessa två är det första man gör för att reducera problemet. Baserat på det
 problemet kan lösas för varje candidate. Antal kombos fås genom produkten av canidatealternativen
 Som sagt ovan. Först kollar man slut och början. Om de är något bestämt så gör man candiate mindre. 
 Sedan måste man skapa olika alternativ oc hålla reda på dem.
+
+group_sizes kommer i den ordningen som de listas.
 '''
 
 d = data[1]
 
 springs, groups = d.split(' ')
-groups = [int(g) for g in groups.split(',')]
+group_sizes = [int(g) for g in groups.split(',')]
 candidates = find_candidates(springs)
 print(springs)
 print(candidates)
 print(len(springs))
 print(groups)
-springs = '.#??.???#.#?#'
-groups = [1,2,3]
-candidates = [[1,3], [5,8], [10,12]]
+#springs = '.#??.???#.#??????#'
+#springs = list(springs)
+#group_sizes = [1,2,3]
+#candidates = [[1,3], [5,8], [10,17]]
+'''
 arrs = [[springs[:candidates[0][0]]]]
 # måste tänke ut en struktur för alternativen,. jag kommer inte få ordning på det annars. 
+i = 1
 
-for candidate in candidates:
-    if springs[candidate[0]]=='#':
-        one_arr =  ['#' for i in range(candidate[1]-candidate[0]+1)]
-print(arrs)
+candidate = candidates[i]
+group_size = 3
+
+ind = candidates[0][0]
+spring_alternatives = [dict((
+    ('springs',[s for s in springs]),
+    ('ind', ind),
+    ('candidates', candidates),
+    ('ok', True)
+    ))]
+'''
+
+class SpringAlternative:
+    def __init__(self, springs, ind, rem_candidates, rem_groups):
+        self.springs = springs[ind:]
+        self.decided_springs = []
+        self.candidates = [[c[0]-ind, c[1]-ind] for c in rem_candidates]
+        self.groups = rem_groups
+        self.children = []
+        self.ok = True
+
+
+    def test_status(self):
+        if len(self.candidates) == 0:
+            self.ok = True
+        elif (
+            (len(self.candidates) == 1) and 
+            (sum(self.groups)>(self.candidates[1] - self.candidates[0]+1))
+            ):
+                self.ok = False
+
+
+    def make_alternatives(self):
+        alt_ind = []
+        if self.springs[self.candidates[0][0]] == '#':
+            next_ind = self.groups[0]+1 # for the necessary '.'
+            alt_ind.append(next_ind)
+            self.decided_springs.append(['#' for i in range(self.groups[0])])
+        else:
+            shift = 0
+            while shift + self.groups[0] <= self.candidates[0][1]:
+                self.decided_springs.append(
+                    ['.' for i in range(shift)] + 
+                    ['#' for i in range(self.groups[0])]
+                    )
+                shift += 1
+        for ds in self.decided_springs:
+            self.children.append(SpringAlternative(
+               self.springs, len(ds), self.candidates[1:], self.groups[1:]
+            ))
+        
+#            if next_ind + self.groups[1] <= self.candidates[0][1] and 
+##                
+##            self.children.append(SpringAlternative(
+  #              self.springs, ind, self.candidates[1:], self.groups[1:]
+  #          ))
+  #          if man kan stoppa in en till grupp i candidate... 
+  #      inds = [3, 4, 5]
+
+   ##     for ind in inds:
+    #        print(self.springs)
+    #        print(self.candidates[1:])
+    #        print(self.groups[1:])
+    #        alt = SpringAlternative(
+     #           self.springs, ind, self.candidates[1:], self.groups[1:]
+      #      )
+      #      self.children.append(alt)
+    def print_me(self):
+        print(''.join(self.springs))
+        for d in self.decided_springs:
+            print(''.join(d))
+        print(self.candidates)
+        print(self.groups)
+        print(len(self.children))
+
+
+#springs = [s for s in '#??.???#.#??????#']
+alternatives = SpringAlternative(
+    springs, candidates[0][0], candidates, group_sizes
+    )
+print('============================')
+alternatives.print_me()
+
+#alternatives.make_alternatives()
+#alternatives.print_me()
+##for alt in alternatives.children:
+#    alt.print_me()
+
+
+
+
+#def for_group(group_size, unknown, known):
