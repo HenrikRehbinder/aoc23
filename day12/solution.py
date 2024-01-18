@@ -85,21 +85,24 @@ print(groups)
 class SpringAlternative:
     def __init__(self, springs, ind, rem_candidates, rem_groups):
         self.springs = springs[ind:]
-        self.decided_springs = []
+        print('TODO')
+        self.decided_springs = [] # TODO: Ska väl lägga till '.' om det finns i början.
         self.candidates = [[c[0]-ind, c[1]-ind] for c in rem_candidates]
         self.groups = rem_groups
         self.children = []
-        self.ok = True
+        self.status = None
+        self.test_status()
+        #if self.status == 'Ok':
+        #    self.make_alternatives()
 
 
     def test_status(self):
         if len(self.candidates) == 0:
-            self.ok = True
-        elif (
-            (len(self.candidates) == 1) and 
-            (sum(self.groups)>(self.candidates[1] - self.candidates[0]+1))
-            ):
-                self.ok = False
+            self.status = 'Done'
+        elif ((len(self.candidates) == 1) and (sum(self.groups)>(self.candidates[0][1] - self.candidates[0][0]+1))):
+            self.status = 'Wrong'
+        else:
+            self.status = 'Ok'
 
 
     def make_alternatives(self):
@@ -110,17 +113,19 @@ class SpringAlternative:
             self.decided_springs.append(['#' for i in range(self.groups[0])])
         else:
             shift = 0
-            while shift + self.groups[0] <= self.candidates[0][1]:
+            while shift + self.groups[0]-1 <= self.candidates[0][1]:
                 self.decided_springs.append(
                     ['.' for i in range(shift)] + 
-                    ['#' for i in range(self.groups[0])]
+                    ['#' for i in range(self.groups[0])] + ['.']
                     )
                 shift += 1
         for ds in self.decided_springs:
+            print('Här. len(ds) ska det inte vara en större för att ta hänsyn till . Och, måste jag inte kolla canidate nogrannare. Det kanske finns kvar plats i den förra. eller kanske lägga till en . ovanför när man konstruerar decided spring.  ')
             self.children.append(SpringAlternative(
                self.springs, len(ds), self.candidates[1:], self.groups[1:]
-            ))
+                           ))
         
+
     def print_me(self):
         print(''.join(self.springs))
         for d in self.decided_springs:
@@ -130,9 +135,18 @@ class SpringAlternative:
         print(len(self.children))
 
 
+    def print_all(self):
+        print('--')
+        #print(self.decided_springs)
+        #print('--')
+        for par, child in zip(self.decided_springs, self.children):
+            print(par)
+            child.print_all()
+
 alternatives = SpringAlternative(
     springs, candidates[0][0], candidates, group_sizes
     )
 print('============================')
+alternatives.make_alternatives()
 alternatives.print_me()
 
