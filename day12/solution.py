@@ -14,8 +14,6 @@ with open(file) as file:
     data = [s.strip() for s in file.readlines()]
 
 
-#d = data[0]
-
 
 def find_candidates(springs):
     # group candidates
@@ -81,26 +79,8 @@ print(springs)
 print(candidates)
 print(len(springs))
 print(groups)
-#springs = '.#??.???#.#??????#'
-#springs = list(springs)
-#group_sizes = [1,2,3]
-#candidates = [[1,3], [5,8], [10,17]]
-'''
-arrs = [[springs[:candidates[0][0]]]]
-# måste tänke ut en struktur för alternativen,. jag kommer inte få ordning på det annars. 
-i = 1
 
-candidate = candidates[i]
-group_size = 3
 
-ind = candidates[0][0]
-spring_alternatives = [dict((
-    ('springs',[s for s in springs]),
-    ('ind', ind),
-    ('candidates', candidates),
-    ('ok', True)
-    ))]
-'''
 
 class SpringAlternative:
     def __init__(self, springs, ind, rem_candidates, rem_groups):
@@ -141,22 +121,6 @@ class SpringAlternative:
                self.springs, len(ds), self.candidates[1:], self.groups[1:]
             ))
         
-#            if next_ind + self.groups[1] <= self.candidates[0][1] and 
-##                
-##            self.children.append(SpringAlternative(
-  #              self.springs, ind, self.candidates[1:], self.groups[1:]
-  #          ))
-  #          if man kan stoppa in en till grupp i candidate... 
-  #      inds = [3, 4, 5]
-
-   ##     for ind in inds:
-    #        print(self.springs)
-    #        print(self.candidates[1:])
-    #        print(self.groups[1:])
-    #        alt = SpringAlternative(
-     #           self.springs, ind, self.candidates[1:], self.groups[1:]
-      #      )
-      #      self.children.append(alt)
     def print_me(self):
         print(''.join(self.springs))
         for d in self.decided_springs:
@@ -166,19 +130,9 @@ class SpringAlternative:
         print(len(self.children))
 
 
-#springs = [s for s in '#??.???#.#??????#']
 alternatives = SpringAlternative(
     springs, candidates[0][0], candidates, group_sizes
     )
 print('============================')
 alternatives.print_me()
 
-#alternatives.make_alternatives()
-#alternatives.print_me()
-##for alt in alternatives.children:
-#    alt.print_me()
-
-
-
-
-#def for_group(group_size, unknown, known):
