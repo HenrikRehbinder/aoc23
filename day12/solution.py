@@ -48,11 +48,11 @@ for d in data:
     springs, groups = d.split(' ')
     groups = [int(g) for g in groups.split(',')]
     candidates = find_candidates(springs)
-    print('--------')
-    print(springs)
-    print(candidates)
-    print(len(springs))
-    print(groups)
+    #print('--------')
+    #print(springs)
+    #print(candidates)
+    #print(len(springs))
+    #print(groups)
     #print(len(candidates)<=len(groups))
 '''
 Längden på varje group och candidate säger nåt om kombinationerna, 
@@ -79,18 +79,13 @@ group_sizes kommer i den ordningen som de listas.
 # att när man initierar SA så har man stegat fram tillräckligt. 
 class SpringAlternative:
     def __init__(self, springs, groups):
-        #if springs[0] == '.':
-        #    print('First spring = "."')
         self.springs = springs
-        self.decided_springs = [] # TODO: Ska väl lägga till '.' om det finns i början. -Nej
-        #self.candidates = candidates
-        #if candidates[0] > 0: 
-        #    print(f'candidates[0] = {candidates[0]} first should be 0')
+        self.decided_springs = [] 
         self.groups = groups
         self.children = []
         self.status = None
         self.test_status()
-        print(f'status: {self.status}')
+        #print(f'status: {self.status}')
 
         if self.status == 'Ok':
             self.make_alternatives()
@@ -111,7 +106,7 @@ class SpringAlternative:
                     break
                 else:
                     pass
-        print(f'next_cand_length: {next_cand_length}')
+        #print(f'next_cand_length: {next_cand_length}')
         if len(self.groups) == 0 and ('#' not in self.springs):
             self.status = 'Done'
         elif len(self.groups) == 0 and ('#' in self.springs):
@@ -122,31 +117,31 @@ class SpringAlternative:
             self.status = 'Ok'
 
     def is_ok(self, s, g_l, shift):
-        print(f's: {s}')
+ #       print(f's: {s}')
         g_l + shift
-        print(f'g_l: {g_l}')
-        print(f'shift: {shift}')
+ #       print(f'g_l: {g_l}')
+ #       print(f'shift: {shift}')
         if shift + g_l > len(s):
-            print('shift too big')
+  #          print('shift too big')
             return -1
         elif '.' not in s[shift:shift+g_l]:
             match = True
-            print('match')
+   #         print('match')
             not_preceeding = True
             if shift > 0:
                 if s[shift-1] == '#':
                     not_preceeding = False
-                    print('preceeding')
-            else:
-                print('beginning')
+#                    print('preceeding')
+ #           else:
+#                print('beginning')
             not_trailing = True
             if shift + g_l < len(s):
                if s[shift + g_l] == '#':
                     not_trailing = False
-                    print('trailing')
+  #                  print('trailing')
         else: 
             match = False
-            print('no match')
+   #         print('no match')
 
         return match and not_preceeding and not_trailing
         
@@ -158,7 +153,8 @@ class SpringAlternative:
                 d_s = ['.' for i in range(shift)] + ['#' for i in range(self.groups[0])]
                 if shift + self.groups[0] < len(self.springs):
                     d_s = d_s + ['.']
-                print(''.join(d_s))
+                d_s = ''.join(d_s)
+    #            print(d_s)
                 self.decided_springs.append(d_s)
                 self.children.append(SpringAlternative(self.springs[len(d_s):], self.groups[1:]))
             shift += 1
@@ -167,9 +163,26 @@ class SpringAlternative:
     def print_me(self):
         print(''.join(self.springs))
         for d in self.decided_springs:
-            print(''.join(d))
+            print(d)
         print(self.groups)
         print(len(self.children))
+    
+    
+    def concatenate_alternatives(self):
+        if len(self.children) == 0:
+            alts = ['']
+        else:
+            alts = []
+            for d_s, child in zip(self.decided_springs, self.children):
+                for s in child.concatenate_alternatives():
+                    alts.append(d_s+s)
+        return alts 
+    
+
+    def list_ok_alternatives(self):
+        alts = self.concatenate_alternatives()
+        ok_alts = [alt for alt in alts if len(alt) == len(self.springs)]
+        return ok_alts
 
 
     def print_all(self):
@@ -182,20 +195,27 @@ class SpringAlternative:
 
 
 print('============================')
+tot_alts = 0
+for d in data:
+    print('----------------------')
+    springs, groups = d.split(' ')
+    group_sizes = [int(g) for g in groups.split(',')]
+    #print(springs)
+    #print(groups)
+    print('Record')
+    print(d)
+    alternatives = SpringAlternative(
+        springs, group_sizes
+        )
+    print('Alternatives')
+    ok_alts = alternatives.list_ok_alternatives()
+    for a in ok_alts:
+        print(a)
+    print(f'Num alts: {len(ok_alts)}')
+    tot_alts += len(ok_alts)
 
-d = data[1]
+print(f'Ans 1: {tot_alts}')
 
-springs, groups = d.split(' ')
-group_sizes = [int(g) for g in groups.split(',')]
-candidates = find_candidates(springs)
-print(springs)
-print(candidates)
-print(len(springs))
-print(groups)
-
-alternatives = SpringAlternative(
-    springs, group_sizes
-    )
 #alternatives.make_alternatives()
 #alternatives.print_me()
 
