@@ -70,67 +70,104 @@ Sedan måste man skapa olika alternativ oc hålla reda på dem.
 group_sizes kommer i den ordningen som de listas.
 '''
 
-d = data[1]
-
-springs, groups = d.split(' ')
-group_sizes = [int(g) for g in groups.split(',')]
-candidates = find_candidates(springs)
-print(springs)
-print(candidates)
-print(len(springs))
-print(groups)
 
 
-
+# Ska SpringAlternatives börja med att städa upp . tex eller ska den som skapar SA ha koll på det. 
+# Känns renast att SpringAlternatives fixar sånt. Men SpringAlternative får förutsätta att alla
+# index är preppade. Den som skapar en SA får ordna det. SpringAlternative förutsätter att första 
+# kan vara #. Att grupper måste separeras av . får den som skapar hantera. Det ställer krav på
+# att när man initierar SA så har man stegat fram tillräckligt. 
 class SpringAlternative:
-    def __init__(self, springs, ind, rem_candidates, rem_groups):
-        self.springs = springs[ind:]
-        print('TODO')
-        self.decided_springs = [] # TODO: Ska väl lägga till '.' om det finns i början.
-        self.candidates = [[c[0]-ind, c[1]-ind] for c in rem_candidates]
-        self.groups = rem_groups
+    def __init__(self, springs, groups):
+        #if springs[0] == '.':
+        #    print('First spring = "."')
+        self.springs = springs
+        self.decided_springs = [] # TODO: Ska väl lägga till '.' om det finns i början. -Nej
+        #self.candidates = candidates
+        #if candidates[0] > 0: 
+        #    print(f'candidates[0] = {candidates[0]} first should be 0')
+        self.groups = groups
         self.children = []
         self.status = None
         self.test_status()
-        #if self.status == 'Ok':
-        #    self.make_alternatives()
+        print(f'status: {self.status}')
+
+        if self.status == 'Ok':
+            self.make_alternatives()
 
 
     def test_status(self):
-        if len(self.candidates) == 0:
+        next_cand_length = 0
+        found_first = False
+        for i, s in enumerate(self.springs):
+            if s in '#?':
+                if found_first:
+                    next_cand_length += 1
+                else:
+                    found_first = True
+                    next_cand_length += 1
+            else:
+                if found_first:
+                    break
+                else:
+                    pass
+        print(f'next_cand_length: {next_cand_length}')
+        if len(self.groups) == 0 and ('#' not in self.springs):
             self.status = 'Done'
-        elif ((len(self.candidates) == 1) and (sum(self.groups)>(self.candidates[0][1] - self.candidates[0][0]+1))):
+        elif len(self.groups) == 0 and ('#' in self.springs):
+            self.status = 'Wrong'
+        elif len(self.groups) > 0 and (next_cand_length < self.groups[0]):
             self.status = 'Wrong'
         else:
             self.status = 'Ok'
 
+    def is_ok(self, s, g_l, shift):
+        print(f's: {s}')
+        g_l + shift
+        print(f'g_l: {g_l}')
+        print(f'shift: {shift}')
+        if shift + g_l > len(s):
+            print('shift too big')
+            return -1
+        elif '.' not in s[shift:shift+g_l]:
+            match = True
+            print('match')
+            not_preceeding = True
+            if shift > 0:
+                if s[shift-1] == '#':
+                    not_preceeding = False
+                    print('preceeding')
+            else:
+                print('beginning')
+            not_trailing = True
+            if shift + g_l < len(s):
+               if s[shift + g_l] == '#':
+                    not_trailing = False
+                    print('trailing')
+        else: 
+            match = False
+            print('no match')
 
-    def make_alternatives(self):
-        alt_ind = []
-        if self.springs[self.candidates[0][0]] == '#':
-            next_ind = self.groups[0]+1 # for the necessary '.'
-            alt_ind.append(next_ind)
-            self.decided_springs.append(['#' for i in range(self.groups[0])])
-        else:
-            shift = 0
-            while shift + self.groups[0]-1 <= self.candidates[0][1]:
-                self.decided_springs.append(
-                    ['.' for i in range(shift)] + 
-                    ['#' for i in range(self.groups[0])] + ['.']
-                    )
-                shift += 1
-        for ds in self.decided_springs:
-            print('Här. len(ds) ska det inte vara en större för att ta hänsyn till . Och, måste jag inte kolla canidate nogrannare. Det kanske finns kvar plats i den förra. eller kanske lägga till en . ovanför när man konstruerar decided spring.  ')
-            self.children.append(SpringAlternative(
-               self.springs, len(ds), self.candidates[1:], self.groups[1:]
-                           ))
+        return match and not_preceeding and not_trailing
         
+ 
+    def make_alternatives(self):
+        shift = 0
+        while shift + self.groups[0] <= len(self.springs):
+            if self.is_ok(self.springs, self.groups[0], shift):
+                d_s = ['.' for i in range(shift)] + ['#' for i in range(self.groups[0])]
+                if shift + self.groups[0] < len(self.springs):
+                    d_s = d_s + ['.']
+                print(''.join(d_s))
+                self.decided_springs.append(d_s)
+                self.children.append(SpringAlternative(self.springs[len(d_s):], self.groups[1:]))
+            shift += 1
+      
 
     def print_me(self):
         print(''.join(self.springs))
         for d in self.decided_springs:
             print(''.join(d))
-        print(self.candidates)
         print(self.groups)
         print(len(self.children))
 
@@ -143,10 +180,22 @@ class SpringAlternative:
             print(par)
             child.print_all()
 
-alternatives = SpringAlternative(
-    springs, candidates[0][0], candidates, group_sizes
-    )
+
 print('============================')
-alternatives.make_alternatives()
-alternatives.print_me()
+
+d = data[1]
+
+springs, groups = d.split(' ')
+group_sizes = [int(g) for g in groups.split(',')]
+candidates = find_candidates(springs)
+print(springs)
+print(candidates)
+print(len(springs))
+print(groups)
+
+alternatives = SpringAlternative(
+    springs, group_sizes
+    )
+#alternatives.make_alternatives()
+#alternatives.print_me()
 
