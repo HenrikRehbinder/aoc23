@@ -9,6 +9,43 @@ import re as re
 import math as math
 import itertools as it
 '''
+
+''' 
+Jag vet inte riktigt hur jag ska göra här. 
+            På nåt sätt måste jag avgöra om en grupp måste placeras på ett sätt
+            Man vet från group hur lång swkens av # man ska placera ut. 
+            Om den funkar i första position så kollar man om den positionen INTE 
+            är tillåten (för att den följs av ett #) Isäfall flyttar man fram
+            Om den är tillåten så kollar man om den går att flytta fram . Det gör 
+            den inte om första elementet var en # (då skulle den hamna innnan) eller 
+            om följande är en .
+            Isåfall har man mer element i given . Därefter lääger man på . och tar nästa grupp.
+
+# def find_given(self):
+#     given = ''
+#     #1. gå förbi .
+#     for i, s in enumerate(self.springs):
+#         if s == '.':
+#             given += '.'
+#         else:
+#             break
+#     rem_springs = self.springs[i:]
+#     # Is there a required # that forces things. 
+#     gl = self.groups[0]
+#     match = False
+#     shift = 0
+#     dots = ''
+#     aggr = ''
+#     if '.' not in rem_springs[shift:shift+gl]:
+#         if '#' == rem_springs[shift + gl]:
+#             dots += '.'
+#             shift += 1
+#         elif '.' == rem_springs[shift + gl]:
+#             for i in range(len(gl)):
+#                 aggr += '#'
+
+
+'''
 file = 'test1.txt'
 #file = 'input.txt'
 task2 = True
@@ -63,22 +100,6 @@ class SpringAlternative:
 
 
     def test_status(self):
-        '''if self.springs != '':
-            #print(self.springs)
-            spring_array = np.array([s for s in self.springs])
-            #print(spring_array)
-            #print(spring_array=='.')
-        
-            num_non_dots = len(spring_array) - sum(spring_array == '.')
-            num_of_hash = sum(self.groups)
-            needed_spring_length = sum(self.groups) + len(self.groups) - 1
-            if (num_non_dots < num_of_hash) or (needed_spring_length > len(self.springs)):
-                enough_space = 'False'
-            else:
-                enough_space = 'True'
-        else:
-            enough_space = 'False'
-        '''
         enough_space = self.test_enough_space(self.springs, self.groups)
 
         slots = [x for x in self.springs.split('.') if x!='']
@@ -99,6 +120,7 @@ class SpringAlternative:
         else:
             self.status = 'Ok'
 
+
     def is_ok(self, s, g_l, shift):
         if shift + g_l > len(s):
             return -1
@@ -112,46 +134,10 @@ class SpringAlternative:
             if shift + g_l < len(s):
                if s[shift + g_l] == '#':
                     not_trailing = False
-        else: 
-            match = False
-
+        else:
+            match = False     
         return match and not_preceeding and not_trailing
         
-    def find_given(self):
-        given = ''
-        #1. gå förbi .
-        for i, s in enumerate(self.springs):
-            if s == '.':
-                given += '.'
-            else:
-                break
-        rem_springs = self.springs[i:]
-        # Is there a required # that forces things. 
-        gl = self.groups[0]
-        match = False
-        shift = 0
-        dots = ''
-        aggr = ''
-        if '.' not in rem_springs[shift:shift+gl]:
-            if '#' == rem_springs[shift + gl]:
-                dots += '.'
-                shift += 1
-            elif '.' == rem_springs[shift + gl]:
-                for i in range(len(gl)):
-                    aggr += '#'
-            Jag vet inte riktigt hur jag ska göra här. 
-            På nåt sätt måste jag avgöra om en grupp måste placeras på ett sätt
-            Man vet från group hur lång swkens av # man ska placera ut. 
-            Om den funkar i första position så kollar man om den positionen INTE 
-            är tillåten (för att den följs av ett #) Isäfall flyttar man fram
-            Om den är tillåten så kollar man om den går att flytta fram . Det gör 
-            den inte om första elementet var en # (då skulle den hamna innnan) eller 
-            om följande är en .
-            Isåfall har man mer element i given . Därefter lääger man på . och tar nästa grupp.
-
-
-
-
 
 
     def make_alternatives(self):
