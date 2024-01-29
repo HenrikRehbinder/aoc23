@@ -43,23 +43,62 @@ class SpringAlternative:
         if self.status == 'Ok':
             self.make_alternatives()
     
+    def test_enough_space(self, springs, groups):
+        if self.springs != '':
+            #print(self.springs)
+            spring_array = np.array([s for s in self.springs])
+            #print(spring_array)
+            #print(spring_array=='.')
+        
+            num_non_dots = len(spring_array) - sum(spring_array == '.')
+            num_of_hash = sum(self.groups)
+            needed_spring_length = sum(self.groups) + len(self.groups) - 1
+            if (num_non_dots < num_of_hash) or (needed_spring_length > len(self.springs)):
+                enough_space = 'False'
+            else:
+                enough_space = 'True'
+        else:
+            enough_space = 'False'
+        return enough_space
 
 
     def test_status(self):
+        '''if self.springs != '':
+            #print(self.springs)
+            spring_array = np.array([s for s in self.springs])
+            #print(spring_array)
+            #print(spring_array=='.')
+        
+            num_non_dots = len(spring_array) - sum(spring_array == '.')
+            num_of_hash = sum(self.groups)
+            needed_spring_length = sum(self.groups) + len(self.groups) - 1
+            if (num_non_dots < num_of_hash) or (needed_spring_length > len(self.springs)):
+                enough_space = 'False'
+            else:
+                enough_space = 'True'
+        else:
+            enough_space = 'False'
+        '''
+        enough_space = self.test_enough_space(self.springs, self.groups)
+
         slots = [x for x in self.springs.split('.') if x!='']
         if slots == []:
             max_group_len = 0
         else:
             max_group_len = max([len(s) for s in slots])
+
         if len(self.groups) == 0 and ('#' not in self.springs):
             self.status = 'Done'
             # Här måste man hänga på lite .... om det finns plats kvar. 
         elif len(self.groups) == 0 and ('#' in self.springs):
             self.status = 'Wrong'
+        elif not(enough_space):
+            self.status = 'Wrong'
         elif len(self.groups) > 0 and max_group_len < self.groups[0]: 
             self.status = 'Wrong'
         else:
             self.status = 'Ok'
+
 
     def is_ok(self, s, g_l, shift):
         if shift + g_l > len(s):
@@ -74,7 +113,7 @@ class SpringAlternative:
             if shift + g_l < len(s):
                if s[shift + g_l] == '#':
                     not_trailing = False
-        else: 
+        else:
             match = False
 
         return match and not_preceeding and not_trailing
@@ -83,7 +122,10 @@ class SpringAlternative:
     def make_alternatives(self):
         shift = 0
         while shift + self.groups[0] <= len(self.springs):
+            #d_s = ['.' for i in range(shift)] + ['#' for i in range(self.groups[0])]
             if self.is_ok(self.springs, self.groups[0], shift):
+                #and self.test_enough_space(self.springs[len(d_s):], self.groups[1:])
+                
                 d_s = ['.' for i in range(shift)] + ['#' for i in range(self.groups[0])]
                 if shift + self.groups[0] < len(self.springs):
                     d_s = d_s + ['.']
@@ -100,22 +142,8 @@ class SpringAlternative:
         print(self.groups)
         print(len(self.children))
     
-    
+ 
     def concatenate_alternatives(self):
-        if len(self.children) == 0:
-            alt_list = ['']
-            ok_list = [self.status == 'Done']
-        else:
-            alt_list = []
-            ok_list = []
-            for d_s, child in zip(self.decided_springs, self.children):
-                alts, oks = child.concatenate_alternatives()
-                for alt, ok in zip(alts, oks):
-                    alt_list.append(d_s + alt)
-                    ok_list.append(ok)
-        return (alt_list, ok_list) 
-    
-    def concatenate_alternatives2(self):
         if len(self.children) == 0:
             alt_list = ['']
             ok_list = [self.status == 'Done']
@@ -144,7 +172,7 @@ class SpringAlternative:
 
 print('============================')
 tot_alts = 0
-for d in data:
+for data_point, d in enumerate(data):
     print('----------------------')
     springs, groups = d.split(' ')
     group_sizes = [int(g) for g in groups.split(',')]
@@ -157,7 +185,7 @@ for d in data:
         springs = long_springs[:-1]
         group_sizes = long_group_sizes
 
-    print('Record')
+    print(f'Record {data_point+1}/{len(data)}')
     print(springs + str(group_sizes))
     alternatives = SpringAlternative(
         springs, group_sizes, 0
