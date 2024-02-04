@@ -32,42 +32,9 @@ for d in data:
 
 print(f'Ans1: {ans1}')
 print('Correct: 494980')
-'''
-After "rn=1":
-Box 0: [rn 1]
 
-After "cm-":
-Box 0: [rn 1]
-
-After "qp=3":
-Box 0: [rn 1]
-Box 1: [qp 3]
-
-After "cm=2":
-Box 0: [rn 1] [cm 2]
-Box 1: [qp 3]
-
-After "qp-":
-Box 0: [rn 1] [cm 2]
-
-After "pc=4":
-Box 0: [rn 1] [cm 2]
-Box 3: [pc 4]
-
-After "ot=9":
-Box 0: [rn 1] [cm 2]
-Box 3: [pc 4] [ot 9]
-'''
-# focal length 1-9
-# operation - or =
-# if =, then focal length follows
-# hash-> box
-# a box has several lens slots. Inserting/removing lenses doesn't change 
-# the other boxes. 
 
 optic = {}
-#for box in range(255):
-#    optic[box] = {}
 
 
 def modify_optics(optic, d):
@@ -81,7 +48,6 @@ def modify_optics(optic, d):
     box = hash(label)
     if remove:
         if box in optic.keys():
-            #find = np.argwhere(label == np.array(optic[box]['label']).squeeze()
             lens_labels = optic[box]['labels']
             focal_lengths = optic[box]['focal_lengths']
             if label in lens_labels:
@@ -110,13 +76,6 @@ def modify_optics(optic, d):
 
 for d in data:
     optic = modify_optics(optic, d)
-    if False:
-        print(d)
-        for box, lenses in optic.items():
-            print(box)
-            for l, fl in zip(lenses['labels'], lenses['focal_lengths']):
-                print((l, fl))
-            print('=========')
 
 ans2 = 0
 for box, lenses in optic.items():
