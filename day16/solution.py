@@ -21,10 +21,10 @@ class Mirrors():
         self.mirrors = mirrors
         self.beam_visits = np.array([['.' for d in dat] for dat in data])
         self.beam_directions = {
-            'left': np.array([[False for d in dat] for dat in data]),
-            'right': np.array([[False for d in dat] for dat in data]),
-            'up': np.array([[False for d in dat] for dat in data]),
-            'down': np.array([[False for d in dat] for dat in data])
+            [0, -1]: np.array([[False for d in dat] for dat in data]),
+            [0, 1]: np.array([[False for d in dat] for dat in data]),
+            [-1, 0]: np.array([[False for d in dat] for dat in data]),
+            [1, 0]: np.array([[False for d in dat] for dat in data])
             }
         self.beams = []
     
@@ -38,8 +38,7 @@ class Mirrors():
         self.beam_directions = beam.visit_directions
         while not beam.status == 'terminated':
             for child in beam.children:
-                self.add_beam(child.start_pos, child.start_dir, self.beam_visits, self.beam_directions)
-
+                self.add_beam(child.start_pos, child.start_dir)
 
 
 
@@ -63,8 +62,9 @@ barn-föräldrar. Hela släkten hänger ihop.
 Ska man kanske ha en klass Mirrors som har alla beams och var de har varit. 
 '''
 
+
     def evolve(self):
-        while (self.status != 'escaped') and (self.status != 'split'):
+        while (self.status != 'terminated') and (self.status != 'split'):
             self.take_step()
         self.trajectory = self.trajectory[1:] #look out. to remove first out of grid pos. will it fly for child beams
         self.directions = self.directions[1:]
@@ -84,9 +84,16 @@ Ska man kanske ha en klass Mirrors som har alla beams och var de har varit.
             ):
             #print(new_pos)
             print('escaped')
-            self.status = 'escaped'
+            self.status = 'terminated'
+        elif (
+            self.visits[new_pos[0], new_pos[1]] == '#' and 
+            self.visit_directions[dir][new_pos[0], new_pos[1]] == True
+            ):
+            print('terminated_loop')
+            self.status = 'terminated'
         else:
-            self.visited[new_pos[0], new_pos[1]] = '#'
+            self.visits[new_pos[0], new_pos[1]] = '#'
+            self.visit_directions[dir][new_pos[0], new_pos[1]] = True
             self.trajectory.append(new_pos)
 
             #direction
@@ -125,10 +132,9 @@ Ska man kanske ha en klass Mirrors som har alla beams och var de har varit.
                     new_dir_2 = [0, 1]
                 print('split')
                 self.status = 'split'
-                self.children.append(Beam(new_pos, new_dir_1, self.mirrors))
-                self.children.append(Beam(new_pos, new_dir_2, self.mirrors))
+                self.children.append([new_pos, new_dir_1])
+                self.children.append([new_pos, new_dir_2])
             
 
 #beam = Beam([0, -1], [0, 1], data)
 
-b2 = Beam([7,1], [0,1], data)     
