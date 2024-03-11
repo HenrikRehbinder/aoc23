@@ -9,6 +9,16 @@ data_arr = []
 for da in data:
     data_arr.append([int(d) for d in da ])
 
+data_arr = np.array(data_arr)
+#print('SMALLER')
+#n = 4
+#data_arr = data_arr[:n, :n]
+if False:
+    data_arr = np.array([
+        [1, 2, 3],
+        [1, 1, 5],
+        [4, 1, 2]
+        ])
 
 
 def move(pos, dir):
@@ -29,55 +39,57 @@ def turns(dir):
         return [np.array([0, 1]), np.array([0, -1])]
 
 
-def new_states(x, blocks):
-    #dirs = np.array([[1, 0], [0, 1],[-1, 0], [0, -1]])
+def make_new_states(x, blocks):
     new = []
-    # Start criteria, we know that num_moves=0 here
-    if np.all(x['dir'] == np.array([0, 0])):
-        #print('*')
-        for dir in np.array([[1, 0], [0, 1],[-1, 0], [0, -1]]):
-            m = move(x['pos'], dir)
-        #    print(m)
-            if in_blocks(m, blocks):
-         #       print('***')
-                new.append({
-                    'pos': m,
-                    'dir': dir,
-                    'num_moves': x['num_moves']+1
-                    })
+#    if np.all(x['dir'] == np.array([0, 0])):
+#        dirs = np.array([[1, 0], [0, 1],[-1, 0], [0, -1]])
+#        turneds = [False, False, False, False] #Need to update 
+    if x['num_moves'] == 3:
+        dirs = turns(x['dir'])
+        turneds = [True, True]
     else:
-        #print('**')
-        if x['num_moves'] < 3:
-            for dir, t in zip([x['dir']] + turns(x['dir']), [False, True, True]):
-                #print((dir, x['dir']))
-                m = move(x['pos'], dir)
-                if t:
-                    num_moves = 0
-                else:
-                    num_moves = x['num_moves'] + 1
-                if in_blocks(m, blocks):
-                    new.append({
-                        'pos': m,
-                        'dir': dir,
-                        'num_moves': num_moves
-                })
+        dirs = [x['dir']] + turns(x['dir'])
+        turneds = [False, True, True]
+    for dir, turned in zip(dirs, turneds):
+        m = move(x['pos'], dir)
+        if turned:
+            num_moves = 0
         else:
-            for dir in turns(x['dir']):
-                #print((dir, x['dir']))
-                m = move(x['pos'], dir)
-                if in_blocks(m, blocks):
-                    new.append({
-                        'pos': m,
-                        'dir': dir,
-                        'num_moves': 0
-                        })
+            num_moves = x['num_moves'] + 1
+        if in_blocks(m, blocks):
+            new.append({
+                'pos': m,
+                'dir': dir,
+                'num_moves': num_moves
+                })
     return new
 
 
 def terminated(x, blocks):
+    print(x['pos'][0])
+    print(x['pos'][1])
     return V[x['pos'][0], x['pos'][1]] is not None
-    #return np.all(x['pos'] == np.array([blocks['n_rows']-1, blocks['n_cols']-1]))
 
+
+def make_key(state):
+    d = state['dir']
+    if np.all(state['dir']==[0,0]):
+        d_str='N'
+    elif np.all(state['dir']==[1,0]):
+        d_str = 'd'
+    elif np.all(state['dir']==[-1,0]):
+        d_str = 'u'
+    elif np.all(state['dir']==[0,-1]):
+        d_str = 'l'
+    elif np.all(state['dir']==[0,1]):
+        d_str = 'r'
+    return (
+        str(state['pos'][0]) + 
+        str(state['pos'][1]) + 
+        d_str + 
+        str(state['num_moves'])
+        )
+    
 
 def cost(x, blocks):
     return blocks['cost'][x['pos'][0], x['pos'][1]]
@@ -105,6 +117,7 @@ def V_fun_old(x, blocks, indent):
         V[x['pos'][0], x['pos'][1]] = min(costs)
         return min(costs)
 
+'''
 def V_fun(x, blocks, indent, V_bound, acc_cost, start_state):
     #....
     n_states = new_states(x, blocks) 
@@ -126,18 +139,56 @@ def V_fun(x, blocks, indent, V_bound, acc_cost, start_state):
             else:
                 V_fun(n_state, blocks, indent+' ', 
                       V_bound, new_acc_cost, start_state)
+'''
 
-# Börja med rad/kolonn närmast slutet 
-# Ta ett steg i varje riktning och håll inkrementera kostnaden. När en av dem terminerar
-    # har vi en max(V(state))kan vi stänga ner de andra om de får en kostnad högre 
-    
-# Jag kan inte bygga upp det nerifrån höger (eftersom det kan finnas bättre lösningar när problemet blir större)
-# En idé är att hålla koll på ackumulerad kostnad när man traverserar.
-# Det här ska ju bara vara att göra - vad gör jag för fel?!
-# Det är ju out of the box dynp. Det måste vara fel i V_fun 
-print('SMALLER')
-n = 8
-data_arr = np.array(data_arr)[:n, :n]
+
+def V_fun(x, blocks, indent, V_bound, acc_cost, start_state):
+    x_key = make_key(x)
+    print(f'{indent}at {x_key}, v_bound {V_bound}')
+    try:
+        V_val = V[x_key]
+        print(f'{indent}Using V table at {x_key} with val {V_val}')
+        #return V_val
+    except: # pylint: disable=bare-except
+        c = cost(x, blocks)
+        print(f'{indent}c: {c}')
+
+        if c >= V_bound:
+            print(f'{indent}c:{c} >= V_bound:{V_bound}->return:{V_bound+c+1}')
+            V_val = V_bound+c+1
+        else:
+            new_states = make_new_states(x, blocks) 
+            print(f'{indent}Evaluating new states at {make_key(x)}: {[make_key(ns) for ns in new_states]}')
+              
+            V_vals = []
+            best_V = V_bound
+            for new_state in new_states: 
+                print(f'{indent}{make_key(new_state)}')
+                # Här måste jag väl uppdatera best_V ? 
+                # Jag skickar ibland in best_V-c = 0, så det är något fel.
+                # Jag tror inte jag tänker rätt här
+                # print(f'{indent}c {c} before V call')
+                V_new_state = V_fun(
+                    new_state, blocks, indent + '--', best_V-c, acc_cost, start_state
+                    )
+                print(f'{indent}Vns {V_new_state}')
+                #print(f'{indent}c {c} after V call')
+
+                print(f'{indent}settled c+V {c+V_new_state} at {make_key(x)} from {make_key(new_state)}')
+                best_V = min((best_V, c + V_new_state))
+                #V_vals.append(V_new_state)
+            #print(f'V_vals {}')
+            V_val = best_V
+            print(f'{indent}writing V at {x_key} with val {V_val} based on minimization')
+            V[x_key] = V_val
+    return V_val
+
+
+def print_V_at_pos(pos_str):
+    for key, val in V.items():
+        if key[:2] == pos_str:
+            print((key, val))
+
 blocks = {
     'cost': data_arr,
     'n_rows': data_arr.shape[0],
@@ -147,18 +198,76 @@ blocks = {
 # state x: koordinater, riktning, num_of_moves (antal förflyttningar i en rikting)
 V_b = sum(sum(blocks['cost']))
 #tmp = [None for col in range(data_arr.shape[1])]
-tmp = [V_b for col in range(data_arr.shape[1])]
-V = [tmp for row in range(data_arr.shape[0])]
-V = np.array(V)
-V[-1, -1] = data_arr[-1,-1]
+
+dummy_end = {
+    'pos': [blocks['n_rows']-1, blocks['n_cols']-1],
+    'dir': np.array((1,0)),
+    'num_moves': 0
+}
+
+end_cost = cost(dummy_end, blocks)
+#V = {
+  #  make_key(dummy_end): end_cost 
+  #  }
+V={}
+for dir in [np.array([1, 0]), np.array([0, 1])]:#,np.array([-1, 0]),np.array([0, -1])]:
+    for num_moves in [0, 1, 2, 3]:
+        V[make_key({
+            'pos': [blocks['n_rows']-1, blocks['n_cols']-1],
+            'dir': dir,
+            'num_moves': num_moves
+        })] = end_cost
+
+#tmp = [V_b for col in range(data_arr.shape[1])]
+#V = [tmp for row in range(data_arr.shape[0])]
+#V = np.array(V)
+#V[-1, -1] = data_arr[-1,-1]
 print('Initial V')
 print(V)
 #V[2, 1] = 5
 #V[1, 2] = 6
 #V[1, 1] = 7
 n_rows = blocks['n_rows']
-#for rc, l in zip(reversed(range(blocks['n_rows']-1)), range(2, blocks['n_rows']+1)):
-   
+#for rc, l in zip(reversed(range(blocks['n_rows']-1)), range(2, blocks['n_rows']+1)):'
+initial_state_d = {
+    'pos': np.array([0, 0]),
+    'dir': np.array([1, 0]),
+    'num_moves': 0
+    }
+initial_state_r = {
+    'pos': np.array([0, 0]),
+    'dir': np.array([0, 1]),
+    'num_moves': 0
+    }
+print(' ')
+print('down')
+ans1_d = V_fun(initial_state_d, blocks, '', V_b, cost(initial_state_d, blocks), initial_state_d)
+print(ans1_d)
+for key, val in V.items():
+    print((key, val))
+print_V_at_pos('00')
+
+
+print(' ')
+print('right')
+ans1_r = V_fun(initial_state_r, blocks, '', V_b, cost(initial_state_r, blocks), initial_state_r)
+print(ans1_r)
+for key, val in V.items():
+    print((key, val))
+print('V at pos 00')    
+print_V_at_pos('00')
+
+
+#print('skunt, var kommer 00l0 ifrån? den ska ju inte ge något V')
+V={}
+for dir in [np.array([1, 0]), np.array([0, 1])]:#,np.array([-1, 0]),np.array([0, -1])]:
+    for num_moves in [0, 1, 2, 3]:
+        V[make_key({
+            'pos': [blocks['n_rows']-1, blocks['n_cols']-1],
+            'dir': dir,
+            'num_moves': num_moves
+        })] = end_cost
+
 for rc in reversed(range(n_rows-1)):
     print(f'rc: {rc}')
 
@@ -166,23 +275,24 @@ for rc in reversed(range(n_rows-1)):
     for j in range(rc+1, n_rows):
         print(f'j:{j}')
         print((rc,j))
-        initial_state = {
-            'pos': np.array([rc, j]),
-            'dir': np.array([0, 0]),
-            'num_moves': 0
-            }
-        print(initial_state['pos'])
-        V_fun(initial_state, blocks, '', None, cost(initial_state, blocks), initial_state)
-        print(V)
-        print((j,rc))
-        initial_state = {
-            'pos': np.array([j, rc]),
-            'dir': np.array([0, 0]),
-            'num_moves': 0
-            }
-        print(initial_state['pos'])
-        V_fun(initial_state, blocks, '', None, cost(initial_state, blocks), initial_state)
-        print(V)
+        for num in [0, 1,2, 3]:
+            initial_state = {
+                'pos': np.array([rc, j]),
+                'dir': np.array([0, 0]),
+                'num_moves': num
+                }
+        #    print(initial_state['pos'])
+            V_fun(initial_state, blocks, '', V_b, cost(initial_state, blocks), initial_state)
+        #print(V)
+        #print((j,rc))
+            initial_state = {
+                'pos': np.array([j, rc]),
+                'dir': np.array([0, 0]),
+                'num_moves': num
+                }
+#            print(initial_state['pos'])
+            V_fun(initial_state, blocks, '', V_b, cost(initial_state, blocks), initial_state)
+ #           print(V)
     print((rc,rc))
     initial_state = {
        'pos': np.array([rc, rc]),
@@ -190,7 +300,7 @@ for rc in reversed(range(n_rows-1)):
         'num_moves': 0
         }
     print(initial_state['pos'])
-    V_fun(initial_state, blocks, '', None, cost(initial_state, blocks), initial_state)
+    V_fun(initial_state, blocks, '', V_b, cost(initial_state, blocks), initial_state)
     print(V)
 
 #ans1= V(initial_state, blocks)
@@ -202,21 +312,22 @@ initial_state = {
     'dir': np.array([0, 0]),
     'num_moves': 0
     }
-print('Fan. Dels är svaret för högt. Dels så har jag missat något fundamentalt. Jag kan inte bara landa i en evakluerad V eftersom jag måste ta hänsyn till att jag kanske redan kört för långt i samma rikting. ')
-print('Om optimal path från en V börjar med tex tre raka så måste jag svänga in i den')
+# print('Fan. Dels är svaret för högt. Dels så har jag missat något fundamentalt. Jag kan inte bara landa i en evakluerad V eftersom jag måste ta hänsyn till att jag kanske redan kört för långt i samma rikting. ')
+# print('Om optimal path från en V börjar med tex tre raka så måste jag svänga in i den')
 
 
-if False:
-    tests = [
-        {'pos':[0,0], 'dir': np.array([0, 0]), 'num_moves': 0},
-        {'pos':[0,3], 'dir': np.array([0,1]), 'num_moves': 2},
-        {'pos':[0,3], 'dir': np.array([0,1]), 'num_moves': 3},
-        {'pos':[0,12], 'dir': np.array([0,1]), 'num_moves': 2},
-        {'pos':[0,12], 'dir': np.array([0,1]), 'num_moves': 3},
-        {'pos':[12,12], 'dir': np.array([0,1]), 'num_moves': 2},
-        {'pos':[12,12], 'dir': np.array([1,0]), 'num_moves': 2}
-        ]
-    for test in tests:
-        print(test)
-        print(new_states(test, blocks))
-        print('---')
+# if False:
+#     tests = [
+#         {'pos':[0,0], 'dir': np.array([0, 0]), 'num_moves': 0},
+#         {'pos':[0,3], 'dir': np.array([0,1]), 'num_moves': 2},
+#         {'pos':[0,3], 'dir': np.array([0,1]), 'num_moves': 3},
+#         {'pos':[0,12], 'dir': np.array([0,1]), 'num_moves': 2},
+#         {'pos':[0,12], 'dir': np.array([0,1]), 'num_moves': 3},
+#         {'pos':[12,12], 'dir': np.array([0,1]), 'num_moves': 2},
+#         {'pos':[12,12], 'dir': np.array([1,0]), 'num_moves': 2}
+#         ]
+#     for test in tests:
+#         print(test)
+#         print(new_states(test, blocks))
+#         print('---')
+
