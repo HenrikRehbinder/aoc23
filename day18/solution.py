@@ -1,35 +1,94 @@
 import sys
 sys.path.append('..')
-from utils.imports import *
-file = 'test1.txt'
+file = 'input.txt'
+task = 2 # 2
 with open(file) as file:
     data = [s.strip() for s in file.readlines()]
 
 
-directions = {
-    'U': np.array((-1, 0)),
-    'D': np.array((1, 0)),
-    'L': np.array((0, -1)),
-    'R': np.array((0, 1))
+direction_map = {
+    0: 'R',
+    1: 'D',
+    2: 'L',
+    3: 'U'
 }
-holes = [np.array([0, 0])]
-instructions = []
+
+
+center_x = [0.5]
+center_y = [-0.5]
+corner_x = []
+corner_y = []
+dxs = []
+dys = []
+old_dire = 'U'
+directions = []
+
+segments = []
+shifts = []
 for d in data:
     dire, length, color = d.split(' ')
-    instructions.append({'dir': dire, 'length': length, 'color': color})
-    for i in range(int(length)):
-        holes.append(holes[-1]+directions[dire])
+    if task == 2:
+        length = int(color[2:-2], 16)
+        dire = int(color[-2], 16)
+        dire = direction_map[dire]
+    directions.append(dire)
+    length = int(length)
+    shifts.append(length+1)
 
-num_rows = max([h[0] for h in holes]) + 1
-num_cols = max([h[1] for h in holes]) + 1
+    if dire == 'U':
+        dx = 0
+        dy = 1
+        if old_dire == 'R':
+            shift_x = -0.5
+            shift_y = +0.5
+        else:
+            shift_x = -0.5
+            shift_y = -0.5
+    elif dire == 'D':
+        dx = 0
+        dy = -1
+        if old_dire == 'R':
+            shift_x = +0.5
+            shift_y = +0.5
+        else:
+            shift_x = +0.5
+            shift_y = -0.5
+    elif dire == 'L':
+        dx = -1
+        dy = 0
+        if old_dire == 'U':
+            shift_x = -0.5
+            shift_y = -0.5
+        else:
+            shift_x = +0.5
+            shift_y = -0.5
+    elif dire == 'R':
+        dx = 1
+        dy = 0
+        if old_dire == 'D':
+            shift_x = +0.5
+            shift_y = +0.5
+        else:
+            shift_x = -0.5
+            shift_y = 0.5
+    else:
+        print('FEL!')
+        dx = '#'
+        dy = '#'
+        shift_x = '#'
+        shift_y = '#'
+    corner_x.append(center_x[-1] + shift_x)
+    corner_y.append(center_y[-1] + shift_y)
+    dxs.append(dx)
+    dys.append(dy)
+    center_x.append(center_x[-1] + dx*length)
+    center_y.append(center_y[-1] + dy*length)
+    old_dire = dire
 
-chart = np.array([['.' for col in range(num_cols)] for row in range(num_rows)])
-for hole in holes:
-    chart[hole[0], hole[1]] = '#'
 
-for row in chart:
-    print(''.join(row))
+corner_x.append(corner_x[0])
+corner_y.append(corner_y[0])
+for cy1, cy0, cx0, dy in zip(corner_y[1:], corner_y[:-1], corner_x[:-1], dys):
+    segments.append(-(cy1-cy0)*cx0)
 
-# seems right up to here.
-
-
+print(f'ans: {sum(segments)}')
