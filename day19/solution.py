@@ -65,6 +65,85 @@ for state in states:
     #print(workflow_sequence)
     if accepted:
         ans += state['x'] + state['m'] + state['a'] + state['s']
-print(ans)
+print(f'Ans: {ans} 377025 correct for the first task')
+
+
+#def add_one_step(step_name, workflows):
+def add_logic(rules):
+#workflow = workflows['qqz']
+    conditions = [s.split(':')[0] for s in rules[:-1]]
+    tmp_c = []
+    for c in conditions:
+        tmp_c.append(c)
+        tmp_c.append(' or ')
+
+    conditions.append(f'(not ({"".join(tmp_c[:-1])}))')
+    next_workflows = [s.split(':')[1] for s in rules[:-1]] + [rules[-1]]
+    extended_rules = []
+    for cond, next in zip(conditions, next_workflows):
+        extended_rules.append(cond + ':' + next)
+    return extended_rules
+
+for name, rules in workflows.items():
+    workflows[name] = add_logic(rules)
+
+
+def add_one_step(rule, workflows):
+    new_rule_list = []
+    cond, next = rule.split(':')
+    if next in ['A', 'R']:
+        new_rule_list = [rule]
+    else:
+        for rule in workflows[next]: 
+            new_rule_list.append(cond + ' and ' + rule)
+    return new_rule_list
+
+test = add_one_step(workflows['in'][1], workflows)
+print(test)
+
+wf = workflows['in']
+def extend_workflow(wf, workflows):
+    t = []
+    for part in wf:
+        wf_list = add_one_step(part, workflows)
+        for x in wf_list:
+            t.append(x)
+    return t
+
+def extend_list(wfs, workflows):
+    extended = []
+    for wf in wfs:
+        print('wf: ' + wf)
+        wf_ext = extend_workflow(wf, workflows)
+        for x in wf_ext:
+            extended.append(x)
+    return extended
+
+wf_list = workflows['in']
+all_AR = False
+while not all_AR:
+    wf_list = extend_workflow(wf_list, workflows)
+    nexts = [rule.split(':')[-1] for rule in wf_list]
+    all_AR = True
+    for next in nexts:
+        if not next in ['A', 'R']:
+            all_AR = False
+            break
+
+terminating = []
+for wf in wf_list:
+    cond, res = wf.split(':')
+    if res == 'A':
+        terminating.append(cond)
+
+
+
+
+# Man kanske ska först skapa alla workflow sequences som kan förekomma. 
+# Varje sån mappar väl till en uppsättning olikheter. 
+
+#workflow_sequences = ['in']
+
+
 
 
