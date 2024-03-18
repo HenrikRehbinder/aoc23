@@ -181,6 +181,7 @@ for b in bounds:
         c *= b[v][1] - b[v][0] + 1
     combinations += c
 print(combinations)
+print('det finns duplikat')
 
 # Man kanske ska först skapa alla workflow sequences som kan förekomma. 
 # Varje sån mappar väl till en uppsättning olikheter. 
