@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 from utils.imports import *
-file = 'input.txt'
+file = 'test1.txt'
 with open(file) as file:
     data = [s.strip() for s in file.readlines()]
 
@@ -74,10 +74,18 @@ def add_logic(rules):
     conditions = [s.split(':')[0] for s in rules[:-1]]
     tmp_c = []
     for c in conditions:
+        #print(c)
+        if '>' in c:
+            c = c.replace('>', '<=')
+        elif '<' in c:
+            c = c.replace('<', '>=')
+        else:
+            print('elände')
         tmp_c.append(c)
-        tmp_c.append(' or ')
+        tmp_c.append(' and ')
+    #print(tmp_c)
 
-    conditions.append(f'(not ({"".join(tmp_c[:-1])}))')
+    conditions.append(f'{"".join(tmp_c[:-1])}')
     next_workflows = [s.split(':')[1] for s in rules[:-1]] + [rules[-1]]
     extended_rules = []
     for cond, next in zip(conditions, next_workflows):
@@ -135,9 +143,44 @@ for wf in wf_list:
     cond, res = wf.split(':')
     if res == 'A':
         terminating.append(cond)
+var_names = ['a', 'x', 'm', 's']
+bounds = []
+for t in terminating:
+    conditions = t.split(' and ')
+    lower = {}
+    for v in var_names:
+        lower[v] = [1]
+    higher = {}
+    for v in var_names:
+        higher[v] = [4000]
 
+    for cond in conditions:
+        for v in var_names:
+            if cond[0] == v:
+                if '>=' in cond:
+                    lower[v].append(int(cond[3:]))
+                elif '<=' in cond:
+                    higher[v].append(int(cond[3:]))
+                elif '>' in cond:
+                    lower[v].append(int(cond[2:])+1)
+                else:
+                    higher[v].append(int(cond[2:])-1)
 
+    d = {}
+    for v in var_names:
+        d[v] = (max(lower[v]), min(higher[v]))
+    bounds.append(d)
 
+for b in bounds:
+    print(b)
+
+combinations = 0
+for b in bounds:
+    c = 1
+    for v in var_names:
+        c *= b[v][1] - b[v][0] + 1
+    combinations += c
+print(combinations)
 
 # Man kanske ska först skapa alla workflow sequences som kan förekomma. 
 # Varje sån mappar väl till en uppsättning olikheter. 
