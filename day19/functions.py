@@ -72,6 +72,7 @@ def add_logic(rules):
 
 def add_one_step(rule, workflows):
     new_rule_list = []
+    print(rule)
     cond, next = rule.split(':')
     if next in ['A', 'R']:
         new_rule_list = [rule]
