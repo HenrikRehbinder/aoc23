@@ -168,7 +168,7 @@ if file_name == 'test2.txt':
 elif file_name == 'test1.txt':
     button_presses = 1
 else:
-    button_presses = 1000
+    button_presses = 10000
     # this is a hack, or an insight from data. rx doesn't send anything so it act as
     # the Output in test2.txt
     modules['rx'] = Output(['df'])
@@ -190,35 +190,25 @@ def press_button():
             if new_message is not None:
                 message_q.append(new_message)
         q_exec += 1
-#        for m in message_q:
-##            print(m)
- #       print(q_exec)
- #       print('----')
-        # input()
-    if False:
-        print('Message list')
-        for m in message_q:
-            for to in m['to']:
-                print(f'{m["from"]} -{m["pulse"]}-> {to}')
-        print(' ')
-        print(num_of_pulses)
+    return message_q
 
 
 for p in range(button_presses):
     print(f'Press button ({p+1})')
-    press_button()
+    message_q = press_button()
+    #print(message_q[-3:])
+    for m in message_q[-5:]:
+        for to in m['to']:
+            print(f'{m["from"]} -{m["pulse"]}-> {to}')
+
+#print('Message list')
+#for m in message_q:
+#    for to in m['to']:
+#        print(f'{m["from"]} -{m["pulse"]}-> {to}')
 
 print(num_of_pulses)
-print(f'ans1: {num_of_pulses["high"]*num_of_pulses["low"]}')
+print(f'ans1: {num_of_pulses["high"]*num_of_pulses["low"]} True is 666795063')
 
-
-
-#print('----')
-#modules['broadcaster'].process('button','low')
-#modules['broadcaster'].send()
-#print('----')
-#modules['broadcaster'].process('button','low')
-#modules['broadcaster'].send()
-#print('----')
-#modules['broadcaster'].process('button','low')
-#modules['broadcaster'].send()
+#for p in range(button_presses):
+#    print(f'Press button ({p+1})')
+#    message_q = press_button()
