@@ -1,8 +1,8 @@
 import sys
 sys.path.append('..')
 from utils.imports import *
-file = 'test1.txt'
-with open(file) as file:
+file_name = 'input.txt'
+with open(file_name) as file:
     data = [s.strip() for s in file.readlines()]
 
 
@@ -57,7 +57,6 @@ class Conjunction:
     it sends a low pulse; otherwise, it sends a high pulse.
     '''
     def __init__(self, name, output):
-        #typename, outputs = str.replace(' ', '').split('->')
         self.name = name
         self.output_modules = output
         self.input_modules = []
@@ -127,6 +126,26 @@ class Button:
 
         return {'from': self.name, 'to': self.output_modules, 'pulse': to_send}
 
+class Output:
+    '''
+    There is a single broadcast module (named broadcaster). When it receives a pulse, it sends the same pulse to
+    all of its destination modules.
+    '''
+    def __init__(self, input):
+        self.name = 'output'
+        self.output_modules = []
+        self.input_modules = input
+    def get_outputs(self):
+        return self.output_modules
+
+    def add_input_module(self, input):
+        self.input_modules.append(input)
+
+    def process(self, input, pulse):
+        pass
+
+    def send(self):
+        pass
 
 
 num_of_pulses = {'high': 0, 'low': 0}
@@ -143,35 +162,56 @@ for d in data:
     elif typename[0] == '&':
         name = typename[1:]
         modules[name] = Conjunction(name, outputs)
-
+if file_name == 'test2.txt':
+    button_presses = 4
+    modules['output'] = Output(['con'])
+elif file_name == 'test1.txt':
+    button_presses = 1
+else:
+    button_presses = 1000
+    # this is a hack, or an insight from data. rx doesn't send anything so it act as
+    # the Output in test2.txt
+    modules['rx'] = Output(['df'])
 modules['button'] = Button()
 for module_name, module in modules.items():
     for output in module.get_outputs():
         modules[output].add_input_module(module_name)
 
-message_q = []
 
-message_q.append(modules['button'].send())
-q_exec = 0
-while q_exec < len(message_q):
-    message = message_q[q_exec]
-    for module_name in message['to']:
-        modules[module_name].process(message['from'], message['pulse'])
-        new_message = modules[module_name].send()
-        if new_message is not None:
-            message_q.append(new_message)
-    q_exec += 1
-    for m in message_q:
-        print(m)
-    print(q_exec)
-    print('----')
-    #input()
-print('Message list')
-for m in message_q:
-    for to in m['to']:
-        print(f'{m["from"]} -{m["pulse"]}-> {to}')
-print(' ')
+def press_button():
+    message_q = []
+    message_q.append(modules['button'].send())
+    q_exec = 0
+    while q_exec < len(message_q):
+        message = message_q[q_exec]
+        for module_name in message['to']:
+            modules[module_name].process(message['from'], message['pulse'])
+            new_message = modules[module_name].send()
+            if new_message is not None:
+                message_q.append(new_message)
+        q_exec += 1
+#        for m in message_q:
+##            print(m)
+ #       print(q_exec)
+ #       print('----')
+        # input()
+    if False:
+        print('Message list')
+        for m in message_q:
+            for to in m['to']:
+                print(f'{m["from"]} -{m["pulse"]}-> {to}')
+        print(' ')
+        print(num_of_pulses)
+
+
+for p in range(button_presses):
+    print(f'Press button ({p+1})')
+    press_button()
+
 print(num_of_pulses)
+print(f'ans1: {num_of_pulses["high"]*num_of_pulses["low"]}')
+
+
 
 #print('----')
 #modules['broadcaster'].process('button','low')
