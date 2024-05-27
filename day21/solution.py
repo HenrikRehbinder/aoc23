@@ -97,7 +97,7 @@ print('ext_garden')
 for g in ext_garden:
     print(''.join(g))
 n = 26501365
-n_steps = 300
+n_steps = 1000
 steps = [6, 10, 50, 100, 500, 1000, 5000]
 x = []
 y = []
